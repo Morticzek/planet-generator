@@ -12,7 +12,7 @@ public class GenerateTerrain : MonoBehaviour
     private float noiseScale = 0.05f;
 
     // [SerializeField]
-    private int chunkSize = 200;
+    private int chunkSize = 100;
 
     private List<Mesh> meshes = new List<Mesh>();//used to avoid memory issues
     private List<GameObject> cubesListToCombine = new List<GameObject>();
