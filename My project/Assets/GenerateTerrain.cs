@@ -144,8 +144,8 @@ public class GenerateTerrain : MonoBehaviour
                 for(int z = 0; z < chunkSize; z++)
                 {
                     points[x,y,z] = new Vector3(x, y, z);
-                    if (Vector3.Distance(new Vector3(x, y, z), Vector3.one * radius) < radius + 1)
-                        noiseAtChunk[x,y,z] = Perlin3D(x * noiseScale * Time.time, y * noiseScale * Time.time, z * noiseScale * Time.time);
+                    if (Vector3.Distance(new Vector3(x, y, z), Vector3.one * radius) < radius - 1)
+                        noiseAtChunk[x,y,z] = Perlin3D(x * noiseScale, y * noiseScale, z * noiseScale );
                     else
                         noiseAtChunk[x,y,z] = 0;
                 }
@@ -217,6 +217,10 @@ public class GenerateTerrain : MonoBehaviour
 
     public float Perlin3D (float x, float y, float z)
     {
+        //this produces new pattern everytime but is a bit wired tho
+        // x = Time.time * x;
+        // y = Time.time * y;
+        // z = Time.time * z;
         float ab = Mathf.PerlinNoise(x, y);
         float bc = Mathf.PerlinNoise(y, z);
         float ac = Mathf.PerlinNoise(x, z);
