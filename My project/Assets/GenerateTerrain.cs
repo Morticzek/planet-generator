@@ -55,9 +55,9 @@ public class GenerateTerrain : MonoBehaviour
         resultVertex = cubeCoords[cornerA] + t *(cubeCoords[cornerB] - cubeCoords[cornerA]);
 
 
-        Debug.Log(valueA + " " + valueB + " " + t);
+        // Debug.Log(valueA + " " + valueB + " " + t);
 
-        Debug.Log("Interpolated point: " + resultVertex.x + " " + resultVertex.y + " " + resultVertex.z);
+        // Debug.Log("Interpolated point: " + resultVertex.x + " " + resultVertex.y + " " + resultVertex.z);
 
         return resultVertex;
     }
@@ -156,8 +156,6 @@ public class GenerateTerrain : MonoBehaviour
 
     void Generate()
     {
-        // GameObject blockPrefab = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
         List<CombineInstance> blockData = new List<CombineInstance>();//this will contain the data for the final mesh
  
         float radius = chunkSize / 2;
@@ -244,7 +242,7 @@ public class GenerateTerrain : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-            if (Input.GetKeyDown(KeyCode.D)) {
+            if (Input.GetKeyDown(KeyCode.R)) {
                 Debug.Log("Deleting cubes");
 
                 Destroy(GameObject.Find("Meshys"));//destroy parent gameobject as well as children.

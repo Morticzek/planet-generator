@@ -38,6 +38,8 @@
   <ItemGroup>
      <Compile Include="Assets/GenerateTerrain.cs" />
      <Compile Include="Assets/marchLookUp.cs" />
+     <Compile Include="Assets/MouseLook.cs" />
+     <Compile Include="Assets/Movement.cs" />
     <Reference Include="UnityEngine">
         <HintPath>/home/bsh/Unity/Hub/Editor/2021.3.1f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>
