@@ -5,6 +5,8 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random=UnityEngine.Random;
+
 // using marchLookUp.LookUpTable;
 
 public struct Triangle {
@@ -16,8 +18,8 @@ public struct Triangle {
 
 public class GenerateTerrain : MonoBehaviour
 {
-    // [SerializeField] 
-    private float noiseScale = 0.05f;
+    [SerializeField] 
+    private float noiseScale = 0.5f;
 
     [SerializeField]
     private int chunkSize = 2;
@@ -25,15 +27,43 @@ public class GenerateTerrain : MonoBehaviour
     [SerializeField]
     private float treshhold = 0.4f;
 
+    [SerializeField]
+    private bool interpolate = false;
+
+    [SerializeField]
+    private Color color;
+
     // private List<Mesh> meshes = new List<Mesh>();//used to avoid memory issues
     private List<GameObject> meshes= new List<GameObject>();
     
     //list of vertices for marching cubes algo
     private List<Vector3> vertices = new List<Vector3>();
 
+    private float noiseXOffset;
+    private float noiseYOffset;
+    private float noiseZOffset; 
+
+    private Vector3 interpolateCoords(int cornerA, int cornerB, float[] cubeNoise, Vector3[] cubeCoords)
+    {
+        float valueA = cubeNoise[cornerA];
+        float valueB = cubeNoise[cornerB];
+
+        float t = (treshhold - valueA) / (valueB - valueA);
+
+        Vector3 resultVertex = new Vector3();
+
+        resultVertex = cubeCoords[cornerA] + t *(cubeCoords[cornerB] - cubeCoords[cornerA]);
+
+
+        Debug.Log(valueA + " " + valueB + " " + t);
+
+        Debug.Log("Interpolated point: " + resultVertex.x + " " + resultVertex.y + " " + resultVertex.z);
+
+        return resultVertex;
+    }
+
     private void marchCubes(List<Vector3> triangles, float[,,] noise, Vector3[,,] points)
     {
-
         //march through the whole chunk
         for(int z = 0; z < chunkSize - 1; z++)
         {
@@ -44,10 +74,6 @@ public class GenerateTerrain : MonoBehaviour
                     //find and store all vertices from generated ones in current cube or generate here
                     float[] currentCube = new float[8];
                     Vector3[] currentCubeVertices = new Vector3[8];
-
-                    float x1 = x * noiseScale;
-                    float y1 = y * noiseScale;
-                    float z1 = z* noiseScale;
 
                     currentCube[0] = noise[x, y, z];
                     currentCube[1] = noise[x + 1, y, z];
@@ -68,12 +94,10 @@ public class GenerateTerrain : MonoBehaviour
                     currentCubeVertices[7] = points[x, y + 1, z + 1];
 
                     int cubeIndex = 0;
-                    int counter = 0;
                     for (int i = 0; i < 8; i++)
                     {
                         if(currentCube[i] > treshhold)
                             cubeIndex += 1 << i;
-                            counter++; 
                     }
                     
 
@@ -90,25 +114,29 @@ public class GenerateTerrain : MonoBehaviour
                         int a2 = cornerIndexAFromEdge[triangulation[cubeIndex,i+2]];
                         int b2 = cornerIndexBFromEdge[triangulation[cubeIndex,i+2]];
 
-                        Vector3 pointA = new Vector3();
-                        Vector3 pointB = new Vector3();
-                        Vector3 pointC = new Vector3();
+                        Vector3 pointA;
+                        Vector3 pointB;
+                        Vector3 pointC;
 
-                        pointA.x = (currentCubeVertices[a0].x + currentCubeVertices[b0].x)/2;
-                        pointA.y = (currentCubeVertices[a0].y + currentCubeVertices[b0].y)/2;
-                        pointA.z = (currentCubeVertices[a0].z + currentCubeVertices[b0].z)/2;
-
-
-                        pointB.x = (currentCubeVertices[a1].x + currentCubeVertices[b1].x)/2;
-                        pointB.y = (currentCubeVertices[a1].y + currentCubeVertices[b1].y)/2;
-                        pointB.z = (currentCubeVertices[a1].z + currentCubeVertices[b1].z)/2;
-
-                        pointC.x = (currentCubeVertices[a2].x + currentCubeVertices[b2].x)/2;
-                        pointC.y = (currentCubeVertices[a2].y + currentCubeVertices[b2].y)/2;
-                        pointC.z = (currentCubeVertices[a2].z + currentCubeVertices[b2].z)/2;
-
+                        if(interpolate)
+                        {
+                            pointA = interpolateCoords(a0, b0, currentCube, currentCubeVertices);
+                            pointB = interpolateCoords(a1, b1, currentCube, currentCubeVertices);
+                            pointC = interpolateCoords(a2, b2, currentCube, currentCubeVertices);
                         
-                       
+                        }
+                        else
+                        {
+                            pointA = new Vector3();
+                            pointB = new Vector3();
+                            pointC = new Vector3();
+
+                            pointA = (currentCubeVertices[a0] + currentCubeVertices[b0]) * 0.5f;
+                            pointB = (currentCubeVertices[a1] + currentCubeVertices[b1]) * 0.5f;
+                            pointC = (currentCubeVertices[a2] + currentCubeVertices[b2]) * 0.5f;
+
+                        }
+
                         triangles.Add(pointA);
                         triangles.Add(pointB);
                         triangles.Add(pointC);
@@ -134,6 +162,13 @@ public class GenerateTerrain : MonoBehaviour
  
         float radius = chunkSize / 2;
 
+        //generate some random offset for noise function
+        noiseXOffset = Random.Range(0f, 999999f);
+        noiseYOffset = Random.Range(0f, 999999f);
+        noiseZOffset = Random.Range(0f, 999999f);
+
+        
+
         //populate the chunk with noise and corresponding vectors
         float[,,] noiseAtChunk = new float[chunkSize, chunkSize, chunkSize];
         Vector3[,,] points = new Vector3[chunkSize, chunkSize, chunkSize];
@@ -143,17 +178,18 @@ public class GenerateTerrain : MonoBehaviour
             {
                 for(int z = 0; z < chunkSize; z++)
                 {
+
                     points[x,y,z] = new Vector3(x, y, z);
-                    if (Vector3.Distance(new Vector3(x, y, z), Vector3.one * radius) < radius - 1)
-                        noiseAtChunk[x,y,z] = Perlin3D(x * noiseScale, y * noiseScale, z * noiseScale );
-                    else
-                        noiseAtChunk[x,y,z] = 0;
+                    // noiseAtChunk[x,y,z] = Perlin3D(x * noiseScale, y * noiseScale, z * noiseScale );
+                    Debug.Log("Perlin at point: " + Perlin3D(x, y, z));
+                    noiseAtChunk[x, y, z] = (radius - 1) - Vector3.Distance(new Vector3(x, y, z), Vector3.one * (radius-1)) - Perlin3D(x, y, z)*noiseScale;
                 }
             }
         }
-
+        
         List<Vector3> verts = new List<Vector3>();
         marchCubes(verts, noiseAtChunk, points);
+        Debug.Log("Generated verts: " + verts.Count);
 
         int maxVertsPerMesh = 30000; //must be divisible by 3, ie 3 verts == 1 triangle
         int numMeshes = verts.Count / maxVertsPerMesh + 1;
@@ -165,6 +201,7 @@ public class GenerateTerrain : MonoBehaviour
             {
                 List<Vector3> splitVerts = new List<Vector3>();
                 List<int> splitIndices = new List<int>();
+              
 
                 for (int j = 0; j < maxVertsPerMesh; j++)
                 {
@@ -179,6 +216,11 @@ public class GenerateTerrain : MonoBehaviour
 
                 if (splitVerts.Count == 0) continue;
 
+                Color[] colors = new Color[splitVerts.Count];
+                for(int ic = 0; ic < splitVerts.Count; ic++)
+                    colors[ic] = color;
+
+
                 Mesh mesh = new Mesh();
                 mesh.SetVertices(splitVerts);
                 mesh.SetTriangles(splitIndices, 0);
@@ -190,8 +232,10 @@ public class GenerateTerrain : MonoBehaviour
                 go.transform.parent = container;
                 go.AddComponent<MeshFilter>();
                 go.AddComponent<MeshRenderer>();
-                go.GetComponent<Renderer>().material = new Material(Shader.Find("Diffuse"));
+                go.GetComponent<Renderer>().material = new Material(Shader.Find("Particles/Standard Surface"));
+                // go.GetComponent<Renderer>().material.color = color;
                 go.GetComponent<MeshFilter>().mesh = mesh;
+                go.GetComponent<MeshFilter>().mesh.colors = colors;
 
                 meshes.Add(go);
             } 
@@ -218,9 +262,9 @@ public class GenerateTerrain : MonoBehaviour
     public float Perlin3D (float x, float y, float z)
     {
         //this produces new pattern everytime but is a bit wired tho
-        // x = Time.time * x;
-        // y = Time.time * y;
-        // z = Time.time * z;
+        x = x + noiseXOffset;
+        y = y + noiseYOffset;
+        z = z + noiseZOffset;
         float ab = Mathf.PerlinNoise(x, y);
         float bc = Mathf.PerlinNoise(y, z);
         float ac = Mathf.PerlinNoise(x, z);
@@ -232,265 +276,6 @@ public class GenerateTerrain : MonoBehaviour
         float abc = ab + bc + ac + ba + cb + ca;
         return abc / 6f;
     }  
-
-    public int[] edges = new int[256] {
-    0x0,
-    0x109,
-    0x203,
-    0x30a,
-    0x406,
-    0x50f,
-    0x605,
-    0x70c,
-    0x80c,
-    0x905,
-    0xa0f,
-    0xb06,
-    0xc0a,
-    0xd03,
-    0xe09,
-    0xf00,
-    0x190,
-    0x99,
-    0x393,
-    0x29a,
-    0x596,
-    0x49f,
-    0x795,
-    0x69c,
-    0x99c,
-    0x895,
-    0xb9f,
-    0xa96,
-    0xd9a,
-    0xc93,
-    0xf99,
-    0xe90,
-    0x230,
-    0x339,
-    0x33,
-    0x13a,
-    0x636,
-    0x73f,
-    0x435,
-    0x53c,
-    0xa3c,
-    0xb35,
-    0x83f,
-    0x936,
-    0xe3a,
-    0xf33,
-    0xc39,
-    0xd30,
-    0x3a0,
-    0x2a9,
-    0x1a3,
-    0xaa,
-    0x7a6,
-    0x6af,
-    0x5a5,
-    0x4ac,
-    0xbac,
-    0xaa5,
-    0x9af,
-    0x8a6,
-    0xfaa,
-    0xea3,
-    0xda9,
-    0xca0,
-    0x460,
-    0x569,
-    0x663,
-    0x76a,
-    0x66,
-    0x16f,
-    0x265,
-    0x36c,
-    0xc6c,
-    0xd65,
-    0xe6f,
-    0xf66,
-    0x86a,
-    0x963,
-    0xa69,
-    0xb60,
-    0x5f0,
-    0x4f9,
-    0x7f3,
-    0x6fa,
-    0x1f6,
-    0xff,
-    0x3f5,
-    0x2fc,
-    0xdfc,
-    0xcf5,
-    0xfff,
-    0xef6,
-    0x9fa,
-    0x8f3,
-    0xbf9,
-    0xaf0,
-    0x650,
-    0x759,
-    0x453,
-    0x55a,
-    0x256,
-    0x35f,
-    0x55,
-    0x15c,
-    0xe5c,
-    0xf55,
-    0xc5f,
-    0xd56,
-    0xa5a,
-    0xb53,
-    0x859,
-    0x950,
-    0x7c0,
-    0x6c9,
-    0x5c3,
-    0x4ca,
-    0x3c6,
-    0x2cf,
-    0x1c5,
-    0xcc,
-    0xfcc,
-    0xec5,
-    0xdcf,
-    0xcc6,
-    0xbca,
-    0xac3,
-    0x9c9,
-    0x8c0,
-    0x8c0,
-    0x9c9,
-    0xac3,
-    0xbca,
-    0xcc6,
-    0xdcf,
-    0xec5,
-    0xfcc,
-    0xcc,
-    0x1c5,
-    0x2cf,
-    0x3c6,
-    0x4ca,
-    0x5c3,
-    0x6c9,
-    0x7c0,
-    0x950,
-    0x859,
-    0xb53,
-    0xa5a,
-    0xd56,
-    0xc5f,
-    0xf55,
-    0xe5c,
-    0x15c,
-    0x55,
-    0x35f,
-    0x256,
-    0x55a,
-    0x453,
-    0x759,
-    0x650,
-    0xaf0,
-    0xbf9,
-    0x8f3,
-    0x9fa,
-    0xef6,
-    0xfff,
-    0xcf5,
-    0xdfc,
-    0x2fc,
-    0x3f5,
-    0xff,
-    0x1f6,
-    0x6fa,
-    0x7f3,
-    0x4f9,
-    0x5f0,
-    0xb60,
-    0xa69,
-    0x963,
-    0x86a,
-    0xf66,
-    0xe6f,
-    0xd65,
-    0xc6c,
-    0x36c,
-    0x265,
-    0x16f,
-    0x66,
-    0x76a,
-    0x663,
-    0x569,
-    0x460,
-    0xca0,
-    0xda9,
-    0xea3,
-    0xfaa,
-    0x8a6,
-    0x9af,
-    0xaa5,
-    0xbac,
-    0x4ac,
-    0x5a5,
-    0x6af,
-    0x7a6,
-    0xaa,
-    0x1a3,
-    0x2a9,
-    0x3a0,
-    0xd30,
-    0xc39,
-    0xf33,
-    0xe3a,
-    0x936,
-    0x83f,
-    0xb35,
-    0xa3c,
-    0x53c,
-    0x435,
-    0x73f,
-    0x636,
-    0x13a,
-    0x33,
-    0x339,
-    0x230,
-    0xe90,
-    0xf99,
-    0xc93,
-    0xd9a,
-    0xa96,
-    0xb9f,
-    0x895,
-    0x99c,
-    0x69c,
-    0x795,
-    0x49f,
-    0x596,
-    0x29a,
-    0x393,
-    0x99,
-    0x190,
-    0xf00,
-    0xe09,
-    0xd03,
-    0xc0a,
-    0xb06,
-    0xa0f,
-    0x905,
-    0x80c,
-    0x70c,
-    0x605,
-    0x50f,
-    0x406,
-    0x30a,
-    0x203,
-    0x109,
-    0x0
-};
 
 public int[,] triangulation = new int[256,16] {
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },
