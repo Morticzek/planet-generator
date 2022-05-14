@@ -47,9 +47,6 @@ public class MouseLook : MonoBehaviour
     {
         
         RaycastHit hit;
-        Ray ray;
-        // Debug.DrawRay(ray.origin, ray.direction * 10, Color.yellow);
-        LayerMask mask = LayerMask.GetMask("Sphere");
         
         if(Physics.Raycast(camera.transform.position, camera.transform.forward, out hit, 100.0f))
         {
@@ -63,9 +60,4 @@ public class MouseLook : MonoBehaviour
         }
     }
 
-    void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawSphere(collision, 0.2f);
-    }
 }
