@@ -481,6 +481,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mouseSensitivity: 100
   playerBody: {fileID: 1206956528}
+  collision: {x: 0, y: 0, z: 0}
+  camera: {fileID: 1690320806}
 --- !u!81 &1690320805
 AudioListener:
   m_ObjectHideFlags: 0

@@ -36,10 +36,10 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
-     <Compile Include="Assets/GenerateTerrain.cs" />
-     <Compile Include="Assets/marchLookUp.cs" />
-     <Compile Include="Assets/MouseLook.cs" />
-     <Compile Include="Assets/Movement.cs" />
+     <Compile Include="Assets/Scripts/GenerateTerrain.cs" />
+     <Compile Include="Assets/Scripts/marchLookUp.cs" />
+     <Compile Include="Assets/Scripts/MouseLook.cs" />
+     <Compile Include="Assets/Scripts/Movement.cs" />
     <Reference Include="UnityEngine">
         <HintPath>/home/bsh/Unity/Hub/Editor/2021.3.1f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>
@@ -655,6 +655,9 @@
     <Reference Include="Unity.VisualStudio.Editor">
         <HintPath>/home/bsh/Pulpit/Studia/planetGenerator/planet-generator/My project/Library/ScriptAssemblies/Unity.VisualStudio.Editor.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.Sysroot.Linux_x86_64">
+        <HintPath>/home/bsh/Pulpit/Studia/planetGenerator/planet-generator/My project/Library/ScriptAssemblies/Unity.Sysroot.Linux_x86_64.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.Timeline.Editor">
         <HintPath>/home/bsh/Pulpit/Studia/planetGenerator/planet-generator/My project/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
     </Reference>
@@ -663,6 +666,9 @@
     </Reference>
     <Reference Include="Unity.TextMeshPro">
         <HintPath>/home/bsh/Pulpit/Studia/planetGenerator/planet-generator/My project/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Toolchain.Linux-x86_64">
+        <HintPath>/home/bsh/Pulpit/Studia/planetGenerator/planet-generator/My project/Library/ScriptAssemblies/Unity.Toolchain.Linux-x86_64.dll</HintPath>
     </Reference>
     <Reference Include="UnityEditor.UI">
         <HintPath>/home/bsh/Pulpit/Studia/planetGenerator/planet-generator/My project/Library/ScriptAssemblies/UnityEditor.UI.dll</HintPath>
@@ -675,6 +681,9 @@
     </Reference>
     <Reference Include="UnityEngine.UI">
         <HintPath>/home/bsh/Pulpit/Studia/planetGenerator/planet-generator/My project/Library/ScriptAssemblies/UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.SysrootPackage.Editor">
+        <HintPath>/home/bsh/Pulpit/Studia/planetGenerator/planet-generator/My project/Library/ScriptAssemblies/Unity.SysrootPackage.Editor.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
