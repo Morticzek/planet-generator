@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using static GenerateTerrain;
+
 public class MouseLook : MonoBehaviour
 {
 
@@ -17,12 +19,19 @@ public class MouseLook : MonoBehaviour
 
     GameObject mySphere;
 
+    GameObject generatorObject;
+
+    GenerateTerrain generatorScript; 
+
     // Start is called before the first frame update
     void Start()
     {
         mySphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         mySphere.layer = LayerMask.NameToLayer ("Ignore Raycast");
         Cursor.lockState = CursorLockMode.Locked;
+
+        generatorObject = GameObject.Find("Generator");
+        generatorScript = (GenerateTerrain) generatorObject.GetComponent(typeof(GenerateTerrain));
     }
 
     // Update is called once per frame
@@ -38,8 +47,6 @@ public class MouseLook : MonoBehaviour
 
         playerBody.Rotate(Vector3.up * mouseX);
 
-        
-
         castRay();
     }
 
@@ -52,7 +59,18 @@ public class MouseLook : MonoBehaviour
         {
             mySphere.SetActive(true);
             collision = hit.point;
+
+            //terraforming on mosue presses
+            if (Input.GetMouseButton(0))
+                //append new terrain when left mouse button is held
+                generatorScript.modifyTerrain(collision, true);
+
+            if(Input.GetMouseButton(1))
+                //remove terrain when right mouse burron is pressed
+                generatorScript.modifyTerrain(collision, false);
+
             mySphere.transform.position = hit.point;
+
         }
         else
         {

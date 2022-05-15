@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random=UnityEngine.Random;
 
-// using marchLookUp.LookUpTable;
 
 public struct Triangle {
     public Vector3 A;
@@ -42,6 +41,13 @@ public class GenerateTerrain : MonoBehaviour
     private float noiseXOffset;
     private float noiseYOffset;
     private float noiseZOffset; 
+
+
+    //These were previously used inside scripts -- will comment them properly later (significant refactoring is needed)
+    float[,,] noiseAtChunk;
+    Vector3[,,] points;
+
+    
 
     private Vector3 interpolateCoords(int cornerA, int cornerB, float[] cubeNoise, Vector3[] cubeCoords)
     {
@@ -154,10 +160,9 @@ public class GenerateTerrain : MonoBehaviour
 
     }
 
-    void Generate()
+    void PopulateNoiseMap()
     {
-        List<CombineInstance> blockData = new List<CombineInstance>();//this will contain the data for the final mesh
- 
+
         float radius = chunkSize / 2;
 
         //generate some random offset for noise function
@@ -165,11 +170,8 @@ public class GenerateTerrain : MonoBehaviour
         noiseYOffset = Random.Range(0f, 999999f);
         noiseZOffset = Random.Range(0f, 999999f);
 
-        
-
-        //populate the chunk with noise and corresponding vectors
-        float[,,] noiseAtChunk = new float[chunkSize, chunkSize, chunkSize];
-        Vector3[,,] points = new Vector3[chunkSize, chunkSize, chunkSize];
+        noiseAtChunk = new float[chunkSize + 100, chunkSize + 100, chunkSize + 100];
+        points = new Vector3[chunkSize + 100, chunkSize + 100, chunkSize + 100];
         for(int x = 0; x < chunkSize; x++)
         {
             for(int y = 0; y < chunkSize; y++)
@@ -184,7 +186,16 @@ public class GenerateTerrain : MonoBehaviour
                 }
             }
         }
-        
+    }
+
+    void Terraform()
+    {
+
+    }
+
+    void Generate()
+    {
+ 
         List<Vector3> verts = new List<Vector3>();
         marchCubes(verts, noiseAtChunk, points);
         Debug.Log("Generated verts: " + verts.Count);
@@ -240,6 +251,43 @@ public class GenerateTerrain : MonoBehaviour
             } 
     }
 
+    //Get the point at which the player is looking add values to noise map
+    public void modifyTerrain(Vector3 collisionPoint, bool creatingTerrain)
+    {
+        int x = (int) collisionPoint.x;
+        int y = (int) collisionPoint.y;
+        int z = (int) collisionPoint.z;
+        int brushSize = 3;
+        for(int i = 0; i < brushSize; i++)
+        {
+            for(int j = 0; j < brushSize; j++)
+            {
+                for(int k = 0; k < brushSize; k++)
+                {
+                    if(creatingTerrain)
+                    {
+                        noiseAtChunk[x + i, y + j, z + k] =  brushSize + Vector3.Distance(new Vector3(x + i, y + j, z + k), Vector3.one * brushSize); 
+                        points[x + i, y + j, z + k] = new Vector3(x + i, y + j, z + k);
+                    }
+                    else
+                    {
+                        noiseAtChunk[x + i, y + j, z + k] =  brushSize - Vector3.Distance(new Vector3(x + i, y + j, z + k), Vector3.one * brushSize); 
+                    }
+
+                }
+            }
+        }
+
+        // noiseAtChunk[x, y, z] = 1;
+        // points[x, y, z] = new Vector3(x, y, z);
+        
+        Destroy(GameObject.Find("Meshys"));//destroy parent gameobject as well as children.
+                foreach (GameObject m in meshes)//meshes still exist even though they aren't in the scene anymore. destroy them so they don't take up memory.
+                    Destroy(m);
+        Generate();
+        Debug.Log("Creating new terrain");
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -254,6 +302,7 @@ public class GenerateTerrain : MonoBehaviour
             if(Input.GetKeyDown(KeyCode.G))
             {
                 Debug.Log("Generating cubes");
+                PopulateNoiseMap();
                 Generate();
             }
     }
