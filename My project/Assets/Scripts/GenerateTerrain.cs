@@ -14,6 +14,49 @@ public struct Triangle {
     public Vector3 C;
 };
 
+public class Chunk : MonoBehaviour
+{
+    //chunk Id
+    private int ID;
+
+    // Size of chunk
+    private int size;
+
+    // Meshe contained within this chunk
+    private GameObject meshes;
+
+    // Center of a chunk
+    private Vector3 center;
+
+    // Color of mesh inside the chunk
+    private Color color;
+
+    // three dimensional array containing noise inside the chunk
+    private float [,,] noiseAtChunk;
+
+    // mesh points that are inside the chunk
+    private Vecttor3 [,,] points;
+
+    public Chunk(int id, int size, Vector3 center, Color col)
+    {
+        this.ID = id;
+        this.size = size;
+        this.center = center;
+        this.color = col;
+
+        this.noiseAtChunk = new float [size, size, size];
+        this.points = new Vector3 [size, size, size];
+
+        //@todo -- get some algo for hashing the chunks, how to get the proper chunk and mesh from 3d coords
+        // add marching cubes and mesh generation for every chunk
+        // add chunk generation
+        // add terrain generation across different chunks
+
+    }
+
+
+}
+
 
 public class GenerateTerrain : MonoBehaviour
 {
