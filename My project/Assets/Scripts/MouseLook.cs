@@ -62,7 +62,12 @@ public class MouseLook : MonoBehaviour
 
             //terraforming on mosue presses
             if (Input.GetMouseButton(0))
-                generatorScript.createNewTerrain(collision);
+                //append new terrain when left mouse button is held
+                generatorScript.modifyTerrain(collision, true);
+
+            if(Input.GetMouseButton(1))
+                //remove terrain when right mouse burron is pressed
+                generatorScript.modifyTerrain(collision, false);
 
             mySphere.transform.position = hit.point;
 
