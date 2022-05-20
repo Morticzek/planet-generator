@@ -40,6 +40,7 @@
      <Compile Include="Assets/Scripts/marchLookUp.cs" />
      <Compile Include="Assets/Scripts/MouseLook.cs" />
      <Compile Include="Assets/Scripts/Movement.cs" />
+     <Compile Include="Assets/Scripts/GenerateChunkTerrain.cs" />
     <Reference Include="UnityEngine">
         <HintPath>/home/bsh/Unity/Hub/Editor/2021.3.1f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>
