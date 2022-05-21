@@ -355,12 +355,12 @@ public class GenerateChunkTerrain : MonoBehaviour
                         globalPoints[absX, absY, absZ] = new Vector3(absX, absY, absZ);
 
                         //this one makes perfect sphere
-                        // globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius-1));
+                        globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius-1));
 
                         // globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(x, y, z), Vector3.one * (radius-1)) - Perlin3D(absX, absY, absZ)*noiseScale;
                         
                         //This line makes cool caves
-                        globalNoise[absX, absY, absZ] = Perlin3D(absX*noiseScale, absY*noiseScale, absZ*noiseScale);
+                        // globalNoise[absX, absY, absZ] = Perlin3D(absX*noiseScale, absY*noiseScale, absZ*noiseScale);
 
                     }
                 }
@@ -394,6 +394,7 @@ public class GenerateChunkTerrain : MonoBehaviour
         this.chunks[(int)id].constructMesh(container, ref globalNoise, ref globalPoints);
     }
 
+
     public void modifyTerrain(Vector3 collisionPoint, bool creatingTerrain)
     {
         int x = (int) collisionPoint.x;
@@ -414,13 +415,15 @@ public class GenerateChunkTerrain : MonoBehaviour
                     {
                         if(x + i < this.planetChunksNum * this.chunkSize + 1 && y + j < this.planetChunksNum * this.chunkSize + 1 && z + k < this.planetChunksNum * this.chunkSize + 1)
                         {
+
+                            // Debug.Log(Vector3.Distance(new Vector3(x + i, y + j, z + k), collisionPoint ));
                             if(creatingTerrain)
                             {
-                                globalNoise[x + i, y + j, z + k] =  brushSize + Vector3.Distance(new Vector3(x + i, y + j, z + k), Vector3.one * brushSize); 
+                                globalNoise[x + i, y + j, z + k] -=  brushSize - Vector3.Distance(collisionPoint, new Vector3(x + i, y + j, z + k)) * 3.9f * Time.deltaTime;
                             }
                             else
                             {
-                                globalNoise[x + i, y + j, z + k] =  brushSize - Vector3.Distance(new Vector3(x + i, y + j, z + k), Vector3.one * brushSize); 
+                                globalNoise[x + i, y + j, z + k] +=  brushSize - Vector3.Distance(collisionPoint, new Vector3(x + i, y + j, z + k))  *  3.9f * Time.deltaTime; 
                             }
                         }
                     }
