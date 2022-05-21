@@ -46,7 +46,10 @@ public class Chunk
     //interpolation flag
     private bool interpolate;
 
-    private float treshhold = 0.5f;
+    private float treshhold = 0.4f;
+
+    // Meshes contained within this chunk
+    public List<GameObject> meshes;
 
     public Chunk(int id, int size, Vector3 center, Vector3Int chunkStart, Color col, bool interpol)
     {
@@ -86,7 +89,7 @@ public class Chunk
         return resultVertex;
     }
 
-    public void marchCubes(float[,,] globalNoise, Vector3[,,] globalPoints)
+    public void marchCubes(ref float[,,] globalNoise, ref Vector3[,,] globalPoints)
     {
         for(int z = 0; z < size; z++)
         {
@@ -181,10 +184,14 @@ public class Chunk
 
     }
 
-    public void constructMesh(List<GameObject> meshes, Transform container, float[,,] globalNoise, Vector3[,,] globalPoints)
+    public void constructMesh(Transform container, ref float[,,] globalNoise, ref Vector3[,,] globalPoints)
     {
+
+        this.meshes = new List<GameObject>();
         triangles = new List<Vector3>();
-        marchCubes(globalNoise, globalPoints);
+        
+
+        marchCubes(ref globalNoise, ref globalPoints);
         // Debug.Log("Generated verts: " + verts.Count);
 
         int maxVertsPerMesh = 30000; //must be divisible by 3, ie 3 verts == 1 triangle
@@ -253,26 +260,34 @@ public class GenerateChunkTerrain : MonoBehaviour
     [SerializeField]
     private bool interpolate = false;
 
+    [SerializeField]
+    int planetChunksNum = 8;
+
+    [SerializeField]
+    int chunkSize = 16;
+
     public float[,,] globalNoise;
 
     public Vector3[,,] globalPoints;
 
-    // Meshe contained within this chunk
-    private List<GameObject> meshes= new List<GameObject>();
+    private float noiseXOffset;
+    private float noiseYOffset;
+    private float noiseZOffset; 
+
+    Transform container;
 
 
     private void generateChunkedPlanet()
     {
 
-        Transform container = new GameObject("Meshys").transform;
+        noiseXOffset = Random.Range(0f, 999999f);
+        noiseYOffset = Random.Range(0f, 999999f);
+        noiseZOffset = Random.Range(0f, 999999f);
 
-        
+        container = new GameObject("Meshys").transform;
 
-        //initalize the chunks
-        int planetChunksNum = 8;
-        int chunkSize = 16;
 
-        int arraysSize = planetChunksNum * chunkSize + 1;
+        int arraysSize = this.planetChunksNum * this.chunkSize + 1;
 
         globalNoise = new float[arraysSize, arraysSize, arraysSize];
 
@@ -301,10 +316,13 @@ public class GenerateChunkTerrain : MonoBehaviour
                     Chunk chunk = new Chunk(chunkId, chunkSize, centre, chunkStartCoords, color, interpolate);
                     
                     chunks.Add(chunk);
+                    chunkId++;
                 }
 
             }
         }
+
+        float noiseScale = 0.05f;
 
         //populate chunks with noiseAtChunk
         foreach (Chunk h in chunks)
@@ -320,6 +338,12 @@ public class GenerateChunkTerrain : MonoBehaviour
                         int absZ = h.chunkStartCoord.z + z;
                         globalPoints[absX, absY, absZ] = new Vector3(absX, absY, absZ);
                         globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius-1));
+
+                        // globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(x, y, z), Vector3.one * (radius-1)) - Perlin3D(absX, absY, absZ)*noiseScale;
+                        
+                        // globalNoise[absX, absY, absZ] = Perlin3D(absX*noiseScale, absY*noiseScale, absZ*noiseScale);
+                        // Debug.Log(globalNoise[absX, absY, absZ]);
+
                     }
                 }
             }
@@ -328,9 +352,86 @@ public class GenerateChunkTerrain : MonoBehaviour
         foreach(Chunk h in chunks)
         {
             // h.marchCubes();
-            h.constructMesh(meshes, container, globalNoise, globalPoints);
+            h.constructMesh(container, ref globalNoise, ref globalPoints);
         }
     }
+
+    private int coordToChunkId(int x, int y, int z)
+    {
+        Double xId = (x / this.chunkSize) * Math.Pow((Double)this.planetChunksNum, 2);
+        Double yId = (y / this.chunkSize) * Math.Pow((Double)this.planetChunksNum, 1);
+        Double zId = (z / this.chunkSize) * Math.Pow((Double)this.planetChunksNum, 0);
+
+        int id = (int) (xId + yId + zId);
+
+        return id;
+    }
+
+    private void rebuildChunk(int id)
+    {
+
+        foreach(GameObject mesh in this.chunks[(int)id].meshes)
+            Destroy(mesh);
+
+        this.chunks[(int)id].constructMesh(container, ref globalNoise, ref globalPoints);
+    }
+
+    public void modifyTerrain(Vector3 collisionPoint, bool creatingTerrain)
+    {
+        int x = (int) collisionPoint.x;
+        int y = (int) collisionPoint.y;
+        int z = (int) collisionPoint.z;
+        int brushSize = 3;
+
+        int affectedChunkId;
+        List<int> affectedChunks = new List<int>();
+
+        for(int i = 0 - brushSize; i < brushSize; i++)
+        {
+            for(int j = 0 - brushSize; j < brushSize; j++)
+            {
+                for(int k = 0 - brushSize; k < brushSize; k++)
+                {
+                    if(creatingTerrain)
+                    {
+                        globalNoise[x + i, y + j, z + k] =  brushSize + Vector3.Distance(new Vector3(x + i, y + j, z + k), Vector3.one * brushSize); 
+                    }
+                    else
+                    {
+                        globalNoise[x + i, y + j, z + k] =  brushSize - Vector3.Distance(new Vector3(x + i, y + j, z + k), Vector3.one * brushSize); 
+                    }
+
+                    affectedChunkId = coordToChunkId(x + i, y + j, z + k);
+                    if(!affectedChunks.Contains(affectedChunkId))
+                        affectedChunks.Add(affectedChunkId);
+
+                }
+            }
+        }
+
+        foreach(int id in affectedChunks)
+            rebuildChunk(id);
+
+
+    }
+
+    public float Perlin3D (float x, float y, float z)
+    {
+        //this produces new pattern everytime but is a bit wired tho
+        x = x + noiseXOffset;
+        y = y + noiseYOffset;
+        z = z + noiseZOffset;
+        float ab = Mathf.PerlinNoise(x, y);
+        float bc = Mathf.PerlinNoise(y, z);
+        float ac = Mathf.PerlinNoise(x, z);
+
+        float ba = Mathf.PerlinNoise(y, x);
+        float cb = Mathf.PerlinNoise(z, y);
+        float ca = Mathf.PerlinNoise(z, x);
+
+        float abc = ab + bc + ac + ba + cb + ca;
+        return abc / 6f;
+    } 
 
     void Update()
     {

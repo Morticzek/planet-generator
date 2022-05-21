@@ -21,7 +21,7 @@ public class MouseLook : MonoBehaviour
 
     GameObject generatorObject;
 
-    GenerateTerrain generatorScript; 
+    GenerateChunkTerrain generatorScript; 
 
     // Start is called before the first frame update
     void Start()
@@ -30,8 +30,8 @@ public class MouseLook : MonoBehaviour
         mySphere.layer = LayerMask.NameToLayer ("Ignore Raycast");
         Cursor.lockState = CursorLockMode.Locked;
 
-        generatorObject = GameObject.Find("Generator");
-        generatorScript = (GenerateTerrain) generatorObject.GetComponent(typeof(GenerateTerrain));
+        generatorObject = GameObject.Find("ChunkGenerator");
+        generatorScript = (GenerateChunkTerrain) generatorObject.GetComponent(typeof(GenerateChunkTerrain));
     }
 
     // Update is called once per frame

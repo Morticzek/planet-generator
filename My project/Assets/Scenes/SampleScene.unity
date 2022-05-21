@@ -344,8 +344,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16a0beb7f995150c0bd57dac59fc4896, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  color: {r: 0.7607843, g: 0.88235295, b: 0.9411765, a: 0}
+  color: {r: 0.14489143, g: 0.5958247, b: 0.8301887, a: 1}
   interpolate: 1
+  planetChunksNum: 8
+  chunkSize: 16
 --- !u!4 &993321194
 Transform:
   m_ObjectHideFlags: 0
