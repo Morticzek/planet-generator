@@ -81,11 +81,6 @@ public class Chunk
 
         resultVertex = cubeCoords[cornerA] + t *(cubeCoords[cornerB] - cubeCoords[cornerA]);
 
-
-        // Debug.Log(valueA + " " + valueB + " " + t);
-
-        // Debug.Log("Interpolated point: " + resultVertex.x + " " + resultVertex.y + " " + resultVertex.z);
-
         return resultVertex;
     }
 
@@ -97,13 +92,25 @@ public class Chunk
             {
                 for(int x = 0; x < size; x++)
                 {
+
+                    // get the absoulte coordinates for global noise and points access
+                    int absX = this.chunkStartCoord.x + x;
+                    int absY = this.chunkStartCoord.y + y;
+                    int absZ = this.chunkStartCoord.z + z;
+
+                    //check if the points are contained inside generated chunks
+                    if(absY+1 > globalPoints.Length )
+                    {
+                        Debug.Log("Index out of global points scope");
+                    }
+
+
+
                     //find and store all vertices from generated ones in current cube or generate here
                     float[] currentCubeNoise = new float[8];
                     Vector3[] currentCubeVertices = new Vector3[8];
 
-                    int absX = this.chunkStartCoord.x + x;
-                    int absY = this.chunkStartCoord.y + y;
-                    int absZ = this.chunkStartCoord.z + z;
+
 
                     currentCubeNoise[0] = globalNoise[absX, absY, absZ];
                     currentCubeNoise[1] = globalNoise[absX + 1, absY, absZ];
@@ -166,6 +173,15 @@ public class Chunk
                             pointC = (currentCubeVertices[a2] + currentCubeVertices[b2]) * 0.5f;
 
                         }
+
+                        /*if(pointA.x >= globalPoints.Length - 1 || pointA.y >= globalPoints.Length - 1 || pointA.z >= globalPoints.Length -1)
+                            Debug.Log("Point A out of scope");
+
+                        if(pointB.x >= globalPoints.Length -1|| pointB.y >= globalPoints.Length-1 || pointB.z >= globalPoints.Length -1)
+                            Debug.Log("Point B out of scope");
+
+                        if(pointC.x >= globalPoints.Length -1|| pointC.y >= globalPoints.Length-1 || pointC.z >= globalPoints.Length -1)
+                            Debug.Log("Point C out of scope");*/
 
                         triangles.Add(pointA);
                         triangles.Add(pointB);
@@ -327,22 +343,24 @@ public class GenerateChunkTerrain : MonoBehaviour
         //populate chunks with noiseAtChunk
         foreach (Chunk h in chunks)
         {
-            for(int x = 0; x < chunkSize; x++)
+            for(int x = 0; x <= chunkSize; x++)
             {
-                for(int y = 0; y < chunkSize; y++)
+                for(int y = 0; y <= chunkSize; y++)
                 {
-                    for(int z = 0; z < chunkSize; z++)
+                    for(int z = 0; z <= chunkSize; z++)
                     {
                         int absX = h.chunkStartCoord.x + x;
                         int absY = h.chunkStartCoord.y + y;
                         int absZ = h.chunkStartCoord.z + z;
                         globalPoints[absX, absY, absZ] = new Vector3(absX, absY, absZ);
-                        globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius-1));
+
+                        //this one makes perfect sphere
+                        // globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius-1));
 
                         // globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(x, y, z), Vector3.one * (radius-1)) - Perlin3D(absX, absY, absZ)*noiseScale;
                         
-                        // globalNoise[absX, absY, absZ] = Perlin3D(absX*noiseScale, absY*noiseScale, absZ*noiseScale);
-                        // Debug.Log(globalNoise[absX, absY, absZ]);
+                        //This line makes cool caves
+                        globalNoise[absX, absY, absZ] = Perlin3D(absX*noiseScale, absY*noiseScale, absZ*noiseScale);
 
                     }
                 }
@@ -392,13 +410,19 @@ public class GenerateChunkTerrain : MonoBehaviour
             {
                 for(int k = 0 - brushSize; k < brushSize; k++)
                 {
-                    if(creatingTerrain)
+                    if(x + i > 0 && y + j > 0 && z + k > 0)
                     {
-                        globalNoise[x + i, y + j, z + k] =  brushSize + Vector3.Distance(new Vector3(x + i, y + j, z + k), Vector3.one * brushSize); 
-                    }
-                    else
-                    {
-                        globalNoise[x + i, y + j, z + k] =  brushSize - Vector3.Distance(new Vector3(x + i, y + j, z + k), Vector3.one * brushSize); 
+                        if(x + i < this.planetChunksNum * this.chunkSize + 1 && y + j < this.planetChunksNum * this.chunkSize + 1 && z + k < this.planetChunksNum * this.chunkSize + 1)
+                        {
+                            if(creatingTerrain)
+                            {
+                                globalNoise[x + i, y + j, z + k] =  brushSize + Vector3.Distance(new Vector3(x + i, y + j, z + k), Vector3.one * brushSize); 
+                            }
+                            else
+                            {
+                                globalNoise[x + i, y + j, z + k] =  brushSize - Vector3.Distance(new Vector3(x + i, y + j, z + k), Vector3.one * brushSize); 
+                            }
+                        }
                     }
 
                     affectedChunkId = coordToChunkId(x + i, y + j, z + k);
@@ -410,8 +434,12 @@ public class GenerateChunkTerrain : MonoBehaviour
         }
 
         foreach(int id in affectedChunks)
-            rebuildChunk(id);
+        {
+            if(id > 0 && id < this.chunks.Count)
+                rebuildChunk(id);
 
+        }
+            
 
     }
 
