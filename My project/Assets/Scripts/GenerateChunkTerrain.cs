@@ -276,23 +276,17 @@ public class GenerateChunkTerrain : MonoBehaviour
     [SerializeField]
     private bool interpolate = false;
 
-    [SerializeField]
-    int planetChunksNum = 8;
+    public int planetChunksNum = 8;
 
-    [SerializeField]
-    int chunkSize = 16;
+    public int chunkSize = 16;
 
-    [SerializeField]
-    float noiseScale = 5.0f;
+    public float noiseScale = 5.0f;
 
-    [SerializeField]
-    float noiseFrequency = 0.05f;
+    public float noiseFrequency = 0.05f;
 
-    [SerializeField]
-    int brushSize = 3;
+    public int brushSize = 3;
 
-    [SerializeField]
-    float brushSpeed = 0.7f;
+    public float brushSpeed = 0.7f;
 
     public float[,,] globalNoise;
 
