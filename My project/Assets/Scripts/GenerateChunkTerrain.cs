@@ -282,6 +282,18 @@ public class GenerateChunkTerrain : MonoBehaviour
     [SerializeField]
     int chunkSize = 16;
 
+    [SerializeField]
+    float noiseScale = 5.0f;
+
+    [SerializeField]
+    float noiseFrequency = 0.05f;
+
+    [SerializeField]
+    int brushSize = 3;
+
+    [SerializeField]
+    float brushSpeed = 0.7f;
+
     public float[,,] globalNoise;
 
     public Vector3[,,] globalPoints;
@@ -338,7 +350,6 @@ public class GenerateChunkTerrain : MonoBehaviour
             }
         }
 
-        float noiseScale = 0.05f;
 
         //populate chunks with noiseAtChunk
         foreach (Chunk h in chunks)
@@ -355,12 +366,12 @@ public class GenerateChunkTerrain : MonoBehaviour
                         globalPoints[absX, absY, absZ] = new Vector3(absX, absY, absZ);
 
                         //this one makes perfect sphere
-                        globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius-1));
+                        // globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius-1));
 
-                        // globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(x, y, z), Vector3.one * (radius-1)) - Perlin3D(absX, absY, absZ)*noiseScale;
+                        globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius-1)) - Perlin3D(absX*noiseFrequency, absY*noiseFrequency, absZ*noiseFrequency) * noiseScale;
                         
                         //This line makes cool caves
-                        // globalNoise[absX, absY, absZ] = Perlin3D(absX*noiseScale, absY*noiseScale, absZ*noiseScale);
+                        // globalNoise[absX, absY, absZ] = Perlin3D(absX*noiseFrequency, absY*noiseFrequency, absZ*noiseFrequency);
 
                     }
                 }
@@ -400,7 +411,7 @@ public class GenerateChunkTerrain : MonoBehaviour
         int x = (int) collisionPoint.x;
         int y = (int) collisionPoint.y;
         int z = (int) collisionPoint.z;
-        int brushSize = 3;
+
 
         int affectedChunkId;
         List<int> affectedChunks = new List<int>();
@@ -419,11 +430,11 @@ public class GenerateChunkTerrain : MonoBehaviour
                             // Debug.Log(Vector3.Distance(new Vector3(x + i, y + j, z + k), collisionPoint ));
                             if(creatingTerrain)
                             {
-                                globalNoise[x + i, y + j, z + k] -=  brushSize - Vector3.Distance(collisionPoint, new Vector3(x + i, y + j, z + k)) * 3.9f * Time.deltaTime;
+                                globalNoise[x + i, y + j, z + k] -=  brushSize - Vector3.Distance(new Vector3(x + i, y + j, z + k), collisionPoint) * brushSpeed * Time.deltaTime;
                             }
                             else
                             {
-                                globalNoise[x + i, y + j, z + k] +=  brushSize - Vector3.Distance(collisionPoint, new Vector3(x + i, y + j, z + k))  *  3.9f * Time.deltaTime; 
+                                globalNoise[x + i, y + j, z + k] +=  brushSize - Vector3.Distance(new Vector3(x + i, y + j, z + k), collisionPoint)  *  brushSpeed * Time.deltaTime; 
                             }
                         }
                     }
