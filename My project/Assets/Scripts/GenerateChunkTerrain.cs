@@ -187,10 +187,6 @@ public class Chunk
                         triangles.Add(pointB);
                         triangles.Add(pointC);
 
-                        //triangle inside the mesh, sometimes might be usefull
-                        // triangles.Add(pointC);
-                        // triangles.Add(pointB);
-                        // triangles.Add(pointA);
                     }
                                   
                 }
@@ -284,6 +280,8 @@ public class GenerateChunkTerrain : MonoBehaviour
 
     public float noiseFrequency = 0.05f;
 
+    public float caveNoiseFrequency = 0.05f;
+
     public int brushSize = 3;
 
     public float brushSpeed = 0.7f;
@@ -362,10 +360,24 @@ public class GenerateChunkTerrain : MonoBehaviour
                         //this one makes perfect sphere
                         // globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius-1));
 
-                        globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius-1)) - Perlin3D(absX*noiseFrequency, absY*noiseFrequency, absZ*noiseFrequency) * noiseScale;
+                        globalNoise[absX, absY, absZ] = (radius) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius)) - Perlin3D(absX*noiseFrequency, absY*noiseFrequency, absZ*noiseFrequency) * noiseScale;
                         
+                        // float caveNoise = Perlin3D(absX*noiseFrequency, absY*noiseFrequency, absZ*noiseFrequency);
+                        // globalNoise[absX, absY, absZ] =+ globalNoise[absX, absY, absZ] - caveNoise * 50;
+
+                        if(globalNoise[absX, absY, absZ] > 0.1f)
+                        {
+                            float caveNoise = Perlin3D(absX*caveNoiseFrequency,  absY*caveNoiseFrequency, absZ*caveNoiseFrequency );
+                            if(caveNoise < 0.42f)
+                                globalNoise[absX, absY, absZ] = caveNoise ;
+                        }
+ 
+                        // else
+                            //  globalNoise[absX, absY, absZ] = (radius) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius)) - Perlin3D(absX*noiseFrequency, absY*noiseFrequency, absZ*noiseFrequency) * noiseScale;
                         //This line makes cool caves
+
                         // globalNoise[absX, absY, absZ] = Perlin3D(absX*noiseFrequency, absY*noiseFrequency, absZ*noiseFrequency);
+
 
                     }
                 }
