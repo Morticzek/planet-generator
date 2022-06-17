@@ -29,7 +29,9 @@ public class Chunk
     public Vector3Int chunkStartCoord;
 
     // Color of mesh inside the chunk
-    private Color color;
+    private Color primaryColor;
+
+    private Color secondaryColor;
 
     // three dimensional array containing noiseAtChunk inside the chunk
     public float [,,] noiseAtChunk;
@@ -39,6 +41,9 @@ public class Chunk
 
     // triangles generated from marching cubes algo
     private List<Vector3> triangles;
+
+    // list of angles between triangles and planet center
+    private List<float>  angles;
 
     //look up table for marching cubes algo
     private marchLookUp lookUpTable = new marchLookUp();
@@ -51,13 +56,14 @@ public class Chunk
     // Meshes contained within this chunk
     public List<GameObject> meshes;
 
-    public Chunk(int id, int size, Vector3 center, Vector3Int chunkStart, Color col, bool interpol)
+    public Chunk(int id, int size, Vector3 center, Vector3Int chunkStart, Color primaryCol, Color secondaryColor, bool interpol)
     {
         this.ID = id;
         this.size = size;
         this.center = center;
         this.chunkStartCoord = chunkStart;
-        this.color = col;
+        this.primaryColor = primaryCol;
+        this.secondaryColor = secondaryColor;
         this.interpolate = interpol;
 
         this.noiseAtChunk = new float [size, size, size];
@@ -84,7 +90,7 @@ public class Chunk
         return resultVertex;
     }
 
-    public void marchCubes(ref float[,,] globalNoise, ref Vector3[,,] globalPoints)
+    public void marchCubes(ref float[,,] globalNoise, ref Vector3[,,] globalPoints, Vector3 planetCenter)
     {
         for(int z = 0; z < size; z++)
         {
@@ -187,6 +193,16 @@ public class Chunk
                         triangles.Add(pointB);
                         triangles.Add(pointC);
 
+                        //calculate normal vector to this new triangle
+                        Vector3 side1 = pointB - pointA;
+                        Vector3 side2 = pointC - pointA;
+                        Vector3 norm = Vector3.Cross(side1, side2);
+                        Vector3 direction = new Vector3(pointA.x - planetCenter.x, pointA.y - planetCenter.y, pointA.z - planetCenter.z);
+                        float angle = Vector3.Angle(direction, norm);
+                        // Debug.Log(angle);
+
+                        angles.Add(angle);
+
                     }
                                   
                 }
@@ -196,14 +212,14 @@ public class Chunk
 
     }
 
-    public void constructMesh(Transform container, ref float[,,] globalNoise, ref Vector3[,,] globalPoints)
+    public void constructMesh(Transform container, ref float[,,] globalNoise, ref Vector3[,,] globalPoints, Vector3 planetCenter)
     {
 
         this.meshes = new List<GameObject>();
         triangles = new List<Vector3>();
-        
+        angles = new List<float>();
 
-        marchCubes(ref globalNoise, ref globalPoints);
+        marchCubes(ref globalNoise, ref globalPoints, planetCenter);
         // Debug.Log("Generated verts: " + verts.Count);
 
         int maxVertsPerMesh = 30000; //must be divisible by 3, ie 3 verts == 1 triangle
@@ -233,7 +249,14 @@ public class Chunk
 
                 Color[] colors = new Color[splitVerts.Count];
                 for(int ic = 0; ic < splitVerts.Count; ic++)
-                    colors[ic] = color;
+                {
+                    if(angles[ic/3] > 20.0f)
+                        colors[ic] = primaryColor;
+                    else if (angles[ic/3] > 16.0f)
+                        colors[ic] = new Color((primaryColor.r + secondaryColor.r)/2, (primaryColor.g + secondaryColor.g)/2, (primaryColor.b + secondaryColor.b)/2);
+                    else 
+                        colors[ic] = secondaryColor;
+                }
 
 
                 Mesh mesh = new Mesh();
@@ -265,7 +288,10 @@ public class Chunk
 public class GenerateChunkTerrain : MonoBehaviour
 {
     [SerializeField]
-    private Color color;
+    private Color primaryColor;
+
+    [SerializeField]
+    private Color secondaryColor;
 
     private List<Chunk> chunks;
 
@@ -296,6 +322,7 @@ public class GenerateChunkTerrain : MonoBehaviour
 
     Transform container;
 
+    Vector3 planetCenter;
 
     private void generateChunkedPlanet()
     {
@@ -315,6 +342,10 @@ public class GenerateChunkTerrain : MonoBehaviour
 
         int radius = chunkSize * (planetChunksNum / 2) - 1;
 
+        planetCenter = new Vector3(radius, radius, radius);
+
+        Debug.Log("Planet center: " + planetCenter);
+
         chunks = new List<Chunk>();
 
         int chunkId = 0;
@@ -333,7 +364,7 @@ public class GenerateChunkTerrain : MonoBehaviour
 
                     Vector3Int chunkStartCoords = new Vector3Int(x * chunkSize, y * chunkSize, z * chunkSize);
 
-                    Chunk chunk = new Chunk(chunkId, chunkSize, centre, chunkStartCoords, color, interpolate);
+                    Chunk chunk = new Chunk(chunkId, chunkSize, centre, chunkStartCoords, primaryColor, secondaryColor, interpolate);
                     
                     chunks.Add(chunk);
                     chunkId++;
@@ -367,13 +398,12 @@ public class GenerateChunkTerrain : MonoBehaviour
 
                         if(globalNoise[absX, absY, absZ] > 0.1f)
                         {
-                            float caveNoise = Perlin3D(absX*caveNoiseFrequency,  absY*caveNoiseFrequency, absZ*caveNoiseFrequency );
+                            float caveNoise = Perlin3D(absX*caveNoiseFrequency,  absY*caveNoiseFrequency, absZ*caveNoiseFrequency);
                             if(caveNoise < 0.42f)
                                 globalNoise[absX, absY, absZ] = caveNoise ;
                         }
  
-                        // else
-                            //  globalNoise[absX, absY, absZ] = (radius) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius)) - Perlin3D(absX*noiseFrequency, absY*noiseFrequency, absZ*noiseFrequency) * noiseScale;
+
                         //This line makes cool caves
 
                         // globalNoise[absX, absY, absZ] = Perlin3D(absX*noiseFrequency, absY*noiseFrequency, absZ*noiseFrequency);
@@ -387,7 +417,18 @@ public class GenerateChunkTerrain : MonoBehaviour
         foreach(Chunk h in chunks)
         {
             // h.marchCubes();
-            h.constructMesh(container, ref globalNoise, ref globalPoints);
+            h.constructMesh(container, ref globalNoise, ref globalPoints, planetCenter);
+        }
+
+        //Place assets on surface of cube
+        for(int i = 0; i < 1; i++)
+        {
+            //get a random position on a sphere
+            Vector3 randomPos = Random.onUnitSphere * radius;
+            randomPos += planetCenter;
+            GameObject instance = Instantiate(Resources.Load("tree1", typeof(GameObject))) as GameObject;
+            instance.transform.position = randomPos;
+
         }
     }
 
@@ -408,7 +449,7 @@ public class GenerateChunkTerrain : MonoBehaviour
         foreach(GameObject mesh in this.chunks[(int)id].meshes)
             Destroy(mesh);
 
-        this.chunks[(int)id].constructMesh(container, ref globalNoise, ref globalPoints);
+        this.chunks[(int)id].constructMesh(container, ref globalNoise, ref globalPoints, planetCenter);
     }
 
 
