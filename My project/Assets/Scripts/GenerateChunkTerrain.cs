@@ -421,7 +421,7 @@ public class GenerateChunkTerrain : MonoBehaviour
         }
 
         //Place assets on surface of cube
-        for(int i = 0; i < 1; i++)
+        for(int i = 0; i < 20; i++)
         {
             //get a random position on a sphere
 
@@ -429,10 +429,12 @@ public class GenerateChunkTerrain : MonoBehaviour
 
             Vector3 randomPos = Random.onUnitSphere * radius;
             randomPos += planetCenter;
-            GameObject instance = Instantiate(Resources.Load("tree1", typeof(GameObject))) as GameObject;
-            Destroy(instance.transform.GetChild(0).gameObject);
+            GameObject instance = Instantiate(Resources.Load("stone1", typeof(GameObject))) as GameObject;
+            Destroy(instance.transform.GetChild(0).gameObject);     //This is only now used as camera is placed at every tree
+            Destroy(instance.transform.GetChild(2).gameObject);     //Also here
             instance.transform.position = randomPos;
-            instance.transform.RotateAround(planetCenter, Vector3.up, 90);  //more sophisticated rotation is needed
+            float angle = Vector3.Angle(instance.transform.position, instance.transform.position - planetCenter);
+            instance.transform.RotateAround(instance.transform.position, Vector3.forward, angle);  //more sophisticated rotation is needed
 
             Vector3 toPlanetVector = planetCenter - instance.transform.position;
                                                             //here cast a new ray from instance to planet center
