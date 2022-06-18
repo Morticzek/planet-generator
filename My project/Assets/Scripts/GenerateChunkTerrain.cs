@@ -424,11 +424,20 @@ public class GenerateChunkTerrain : MonoBehaviour
         for(int i = 0; i < 1; i++)
         {
             //get a random position on a sphere
+
+            RaycastHit hit;
+
             Vector3 randomPos = Random.onUnitSphere * radius;
             randomPos += planetCenter;
             GameObject instance = Instantiate(Resources.Load("tree1", typeof(GameObject))) as GameObject;
+            Destroy(instance.transform.GetChild(0).gameObject);
             instance.transform.position = randomPos;
+            instance.transform.RotateAround(planetCenter, Vector3.up, 90);  //more sophisticated rotation is needed
 
+            Vector3 toPlanetVector = planetCenter - instance.transform.position;
+                                                            //here cast a new ray from instance to planet center
+            if(Physics.Raycast(instance.transform.position, toPlanetVector, out hit, 100.0f))
+                instance.transform.position = hit.point;
         }
     }
 
@@ -463,11 +472,11 @@ public class GenerateChunkTerrain : MonoBehaviour
         int affectedChunkId;
         List<int> affectedChunks = new List<int>();
 
-        for(int i = 0 - brushSize; i < brushSize; i++)
+        for(int i = -1 - brushSize; i < brushSize+1; i++)
         {
-            for(int j = 0 - brushSize; j < brushSize; j++)
+            for(int j = -1 - brushSize; j < brushSize+1; j++)
             {
-                for(int k = 0 - brushSize; k < brushSize; k++)
+                for(int k = -1 - brushSize; k < brushSize+1; k++)
                 {
                     if(x + i > 0 && y + j > 0 && z + k > 0)
                     {
