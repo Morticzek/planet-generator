@@ -604,7 +604,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   primaryColor: {r: 0.3490566, g: 0.20581168, b: 0.20581168, a: 0}
   secondaryColor: {r: 0.09825561, g: 0.3018868, b: 0.12902373, a: 0}
+  broccoliColor: {r: 0.2004717, g: 0.20869015, b: 0.8018868, a: 0}
   interpolate: 1
+  numOfTrees: 15
   planetChunksNum: 8
   chunkSize: 16
   noiseScale: 20

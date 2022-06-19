@@ -293,10 +293,16 @@ public class GenerateChunkTerrain : MonoBehaviour
     [SerializeField]
     private Color secondaryColor;
 
+    [SerializeField]
+    private Color broccoliColor;
+
     private List<Chunk> chunks;
 
     [SerializeField]
     private bool interpolate = false;
+
+    [SerializeField]
+    public int numOfTrees = 10;
 
     public int planetChunksNum = 8;
 
@@ -391,11 +397,10 @@ public class GenerateChunkTerrain : MonoBehaviour
                         //this one makes perfect sphere
                         // globalNoise[absX, absY, absZ] = (radius - 1) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius-1));
 
+                        //This line makes sphere with noise on the surface
                         globalNoise[absX, absY, absZ] = (radius) - Vector3.Distance(new Vector3(absX, absY, absZ), Vector3.one * (radius)) - Perlin3D(absX*noiseFrequency, absY*noiseFrequency, absZ*noiseFrequency) * noiseScale;
                         
-                        // float caveNoise = Perlin3D(absX*noiseFrequency, absY*noiseFrequency, absZ*noiseFrequency);
-                        // globalNoise[absX, absY, absZ] =+ globalNoise[absX, absY, absZ] - caveNoise * 50;
-
+                        //combined with cave noise it makes noisy sphere with caves
                         if(globalNoise[absX, absY, absZ] > 0.1f)
                         {
                             float caveNoise = Perlin3D(absX*caveNoiseFrequency,  absY*caveNoiseFrequency, absZ*caveNoiseFrequency);
@@ -405,10 +410,7 @@ public class GenerateChunkTerrain : MonoBehaviour
  
 
                         //This line makes cool caves
-
                         // globalNoise[absX, absY, absZ] = Perlin3D(absX*noiseFrequency, absY*noiseFrequency, absZ*noiseFrequency);
-
-
                     }
                 }
             }
@@ -421,26 +423,19 @@ public class GenerateChunkTerrain : MonoBehaviour
         }
 
         //Place assets on surface of cube
-        for(int i = 0; i < 10; i++)
+        for(int i = 0; i < numOfTrees; i++)
         {
             //get a random position on a sphere
-
             RaycastHit hit;
-
             Vector3 randomPos = Random.onUnitSphere * radius;
             randomPos += planetCenter;
             GameObject instance = Instantiate(Resources.Load("tree_low", typeof(GameObject))) as GameObject;
-
-
+            instance.GetComponent<Renderer>().material.color = broccoliColor;
             instance.transform.position = randomPos;
-            // float angle = Vector3.Angle(instance.transform.position, instance.transform.position - planetCenter);
-            // Debug.Log("Tree angle: " + angle);
-            // instance.transform.RotateAround(instance.transform.position, new Vector3(0, 1, 0), angle);  //more sophisticated rotation is needed
-
             Vector3 toPlanetVector = planetCenter - instance.transform.position;
             instance.transform.LookAt(planetCenter);
             instance.transform.rotation = instance.transform.rotation*Quaternion.Euler(0, 180, 0);
-                                                            //here cast a new ray from instance to planet center
+            //here cast a new ray from instance to planet center
             if(Physics.Raycast(instance.transform.position, toPlanetVector, out hit, 100.0f))
                 instance.transform.position = hit.point;
         }
