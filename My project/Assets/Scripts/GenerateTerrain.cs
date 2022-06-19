@@ -290,20 +290,21 @@ public class GenerateTerrain : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-            if (Input.GetKeyDown(KeyCode.R)) {
-                Debug.Log("Deleting cubes");
+            //right now generating of reuglar planet is disabled as it takes way too much time
+            // if (Input.GetKeyDown(KeyCode.R)) {
+            //     Debug.Log("Deleting cubes");
 
-                Destroy(GameObject.Find("Meshys"));//destroy parent gameobject as well as children.
-                foreach (GameObject m in meshes)//meshes still exist even though they aren't in the scene anymore. destroy them so they don't take up memory.
-                    Destroy(m);
-                }
+            //     Destroy(GameObject.Find("Meshys"));//destroy parent gameobject as well as children.
+            //     foreach (GameObject m in meshes)//meshes still exist even though they aren't in the scene anymore. destroy them so they don't take up memory.
+            //         Destroy(m);
+            //     }
 
-            if(Input.GetKeyDown(KeyCode.G))
-            {
-                Debug.Log("Generating cubes");
-                PopulateNoiseMap();
-                Generate();
-            }
+            // if(Input.GetKeyDown(KeyCode.G))
+            // {
+            //     Debug.Log("Generating cubes");
+            //     PopulateNoiseMap();
+            //     Generate();
+            // }
     }
 
     public float Perlin3D (float x, float y, float z)

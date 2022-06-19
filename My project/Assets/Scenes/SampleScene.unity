@@ -562,9 +562,9 @@ MonoBehaviour:
     Add blocks - RMB
 
     Generate
-    a regular planet - G
+    planet - H
 
-    Generate a chunked planet - H'
+    Delete planet - U'
 --- !u!222 &785996933
 CanvasRenderer:
   m_ObjectHideFlags: 0
