@@ -321,6 +321,8 @@ public class GenerateChunkTerrain : MonoBehaviour
     public float[,,] globalNoise;
 
     public Vector3[,,] globalPoints;
+    
+    private List<GameObject> trees;
 
     private float noiseXOffset;
     private float noiseYOffset;
@@ -339,6 +341,7 @@ public class GenerateChunkTerrain : MonoBehaviour
 
         container = new GameObject("Meshys").transform;
 
+        trees = new List<GameObject>();
 
         int arraysSize = this.planetChunksNum * this.chunkSize + 1;
 
@@ -438,6 +441,8 @@ public class GenerateChunkTerrain : MonoBehaviour
             //here cast a new ray from instance to planet center
             if(Physics.Raycast(instance.transform.position, toPlanetVector, out hit, 100.0f))
                 instance.transform.position = hit.point;
+
+            trees.Add(instance);
         }
     }
 
@@ -538,8 +543,12 @@ public class GenerateChunkTerrain : MonoBehaviour
 
                 Destroy(GameObject.Find("Meshys"));
 
-                // foreach (GameObject m in allMeshes)//meshes still exist even though they aren't in the scene anymore. destroy them so they don't take up memory.
-                    // Destroy(m);
+                // GameObject[] trees;
+
+                // trees = GameObject.FindGameObjectsWithTag("tree_low(Clone)");
+
+                foreach (GameObject m in trees)//meshes still exist even though they aren't in the scene anymore. destroy them so they don't take up memory.
+                    Destroy(m);
                 }
 
             if(Input.GetKeyDown(KeyCode.H))
